@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '@/utils/apiUrl';
 // import { handleLogout } from '../utils/logout';
 
 interface ApiResponseError {
@@ -13,7 +14,7 @@ interface CustomError {
 
 const pendingRequests: { [key: string]: Promise<any> } = {};
 
-const apiClient = (baseUrl: string = process.env.REACT_APP_API_PROD_URL!): AxiosInstance => {
+const apiClient = (baseUrl: string = API_URL): AxiosInstance => {
     if (!baseUrl) {
         throw new Error('API configurations not set.');
     }
