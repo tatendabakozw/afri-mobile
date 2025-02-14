@@ -1,15 +1,27 @@
 import { Text, View, TouchableOpacity } from 'react-native';
-
+import PrimaryDropdown from '@/components/dropdowns/primary-dropdown';
+import { countryOptions } from '@/utils/countryOptions';
+import { genderOptions } from '@/utils/genderOptions';
 import AuthLayout from '@/layouts/AuthLayout';
 import React, { useState } from 'react';
 import { router } from 'expo-router';
 import tw from 'twrnc';
-import PrimaryButton from '@/components/buttons/primary-button';
 import PrimaryInput from '@/components/inputs/primary-input';
+import PrimaryButton from '@/components/buttons/primary-button';
 import DateInput from '@/components/inputs/date-input';
-import PrimaryDropdown from '@/components/dropdowns/primary-dropdown';
-import { genderOptions } from '@/utils/genderOptions';
-import { countryOptions } from '@/utils/countryOptions';
+import { validateEmail } from '@/helpers/validateEmail';
+
+interface FormErrors {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  terms: string;
+  dob: string;
+  gender: string;
+  country: string;
+}
 
 const Register = () => {
   const [step, setStep] = useState(1);
@@ -25,24 +37,102 @@ const Register = () => {
     gender: '',
     country: '',
   });
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<FormErrors>({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    terms: ''
+    terms: '',
+    dob: '',
+    gender: '',
+    country: ''
   });
-  
+
+  const validatePassword = (password: string) => {
+    return password.length >= 8;
+  };
+
+  const validateStep1 = () => {
+    const newErrors: FormErrors = {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      terms: '',
+      dob: '',
+      gender: '',
+      country: ''
+    };
+
+    let isValid = true;
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+      isValid = false;
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+      isValid = false;
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+      isValid = false;
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Invalid email format';
+      isValid = false;
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+      isValid = false;
+    } else if (!validatePassword(formData.password)) {
+      newErrors.password = 'Password must be at least 8 characters';
+      isValid = false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
 
   const handleNextStep = () => {
     if (step === 1) {
-      if (formData.password !== formData.confirmPassword) {
-        console.log('Passwords do not match');
+      if (!validateStep1()) {
         return;
       }
       setStep(2);
     } else if (step === 2) {
+      if (!formData.day || !formData.month || !formData.year) {
+        setErrors(prev => ({
+          ...prev,
+          dob: 'Date of birth is required'
+        }));
+        return;
+      }
+      if (!formData.gender) {
+        setErrors(prev => ({
+          ...prev,
+          gender: 'Gender is required'
+        }));
+        return;
+      }
+      if (!formData.country) {
+        setErrors(prev => ({
+          ...prev,
+          country: 'Country is required'
+        }));
+        return;
+      }
+
       const dob = `${formData.year}-${formData.month.padStart(
         2,
         '0'
@@ -71,37 +161,44 @@ const Register = () => {
               value={formData.firstName}
               onChangeText={(value) => handleInputChange('firstName', value)}
               placeholder="First name"
-              style={tw`w-full mb-4`}
+              style={tw`w-full mt-4`}
+              errorMessage={errors.firstName}
             />
+
             <PrimaryInput
               value={formData.lastName}
               onChangeText={(value) => handleInputChange('lastName', value)}
               placeholder="Last name"
-              style={tw`w-full mb-4`}
+              style={tw`w-full mt-4`}
+              errorMessage={errors.lastName}
             />
+
             <PrimaryInput
               value={formData.email}
               onChangeText={(value) => handleInputChange('email', value)}
               placeholder="Email address"
               keyboardType="email-address"
               autoCapitalize="none"
-              style={tw`w-full mb-4`}
+              style={tw`w-full mt-4`}
+              errorMessage={errors.email}
             />
+
             <PrimaryInput
               value={formData.password}
               onChangeText={(value) => handleInputChange('password', value)}
               placeholder="Password"
               secureTextEntry
-              style={tw`w-full mb-4`}
+              style={tw`w-full mt-4`}
+              errorMessage={errors.password}
             />
+
             <PrimaryInput
               value={formData.confirmPassword}
-              onChangeText={(value) =>
-                handleInputChange('confirmPassword', value)
-              }
+              onChangeText={(value) => handleInputChange('confirmPassword', value)}
               placeholder="Confirm password"
               secureTextEntry
-              style={tw`w-full mb-8`}
+              style={tw`w-full`}
+              errorMessage={errors.confirmPassword}
             />
             <PrimaryButton
               onPress={handleNextStep}
@@ -136,7 +233,7 @@ const Register = () => {
               onChangeMonth={(value) => handleInputChange('month', value)}
               onChangeYear={(value) => handleInputChange('year', value)}
               label="Date of Birth"
-              error=""
+              error={errors.dob}
             />
 
             <PrimaryDropdown
@@ -146,6 +243,7 @@ const Register = () => {
               onChange={(value) => handleInputChange('gender', value)}
               placeholder="Select gender"
               label="Gender"
+              error={errors.gender}
             />
 
             <PrimaryDropdown
@@ -156,6 +254,7 @@ const Register = () => {
               label="Country"
               searchable={true}
               searchPlaceholder="Search countries..."
+              error={errors.country}
             />
 
             <View style={tw`flex-row justify-between w-full`}>
