@@ -29,7 +29,7 @@ const GeneralNavbar = () => {
         <NetworkIndicator />
 
         {/* Profile Icon */}
-        <TouchableOpacity onPress={() => router.push('/(auth)')} style={tw`p-2`}>
+        <TouchableOpacity onPress={() => router.push('/(settings)/profile')} style={tw`p-2`}>
           <Ionicons name="person-circle-outline" size={24} color="#32B3C2" />
         </TouchableOpacity>
       </View>
