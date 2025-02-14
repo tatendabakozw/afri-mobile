@@ -12,7 +12,7 @@ export default function TabLayout() {
       })}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      {/* <Stack.Screen
+      <Stack.Screen
         name="register"
         options={{
           title: "Register",
@@ -33,13 +33,6 @@ export default function TabLayout() {
           headerShown:false
         }}
       />
-      <Stack.Screen
-        name="reset-password"
-        options={{
-          title: "Reset Password",
-          headerShown:false
-        }}
-      /> */}
     </Stack>
   );
 }

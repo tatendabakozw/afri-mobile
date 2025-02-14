@@ -1,10 +1,10 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import PrimaryButton from '@/components/buttons/primary-button';
+import PrimaryInput from '@/components/inputs/primary-input';
+import { Text, View, TouchableOpacity } from 'react-native'
 import AuthLayout from '@/layouts/AuthLayout';
+import React, { useState } from 'react'
 import { router } from 'expo-router';
 import tw from 'twrnc'
-import PrimaryInput from '@/components/buttons/primary-input';
-import PrimaryButton from '@/components/buttons/primary-button';
 
 const Index = () => {
   const [email, setEmail] = useState('')
@@ -87,21 +87,5 @@ const Index = () => {
     </AuthLayout>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  customContainer: {
-    width: '80%',
-  },
-  customInput: {
-    borderColor: '#29A1AF',
-    borderWidth: 2,
-  },
-})
 
 export default Index
