@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, Keyboard, Animated } from 'react-native'
+import { Text, View, TouchableOpacity, TextInput, Keyboard, Animated } from 'react-native'
 import React, { useState, useRef, useEffect } from 'react'
 import AuthLayout from '@/layouts/AuthLayout'
 import tw from 'twrnc'
