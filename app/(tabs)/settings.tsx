@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import tw from 'twrnc'
 import { router } from 'expo-router'
-// import { handleLogout } from '@/utils/logout'
+import { handleLogout } from '@/utils/logout'
 import GeneralLayout from '@/layouts/GeneralLayout'
 import ConfirmationAlert from '@/components/alerts/confirmation-alert'
 
@@ -107,7 +107,7 @@ const Settings = () => {
               text: "Logout",
               onPress: () => {
                 setShowLogoutAlert(false);
-                // handleLogout();
+                handleLogout();
               },
               style: "destructive"
             }
