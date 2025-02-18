@@ -4,7 +4,7 @@ import tw from 'twrnc'
 
 type Props = {
   message: string;
-  type: 'success' | 'error' | 'warning';
+  type: 'success' | 'error' | 'warning' | 'info';
 }
 
 const PrimaryAlert = ({ message, type }: Props) => {
@@ -16,6 +16,8 @@ const PrimaryAlert = ({ message, type }: Props) => {
         return tw`bg-red-50 text-red-800`;
       case 'warning':
         return tw`bg-yellow-50 text-yellow-800`;
+      case 'info':
+        return tw`bg-blue-50 text-blue-800`;
       default:
         return tw`bg-gray-50 text-gray-800`;
     }
