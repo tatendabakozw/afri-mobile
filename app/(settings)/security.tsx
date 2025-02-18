@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TextInput, ActivityIndicator, ScrollView, TouchableOpacity, Switch } from 'react-native';
-import SettingsLayout from '@/layouts/SettingsLayout';
-import tw from 'twrnc';
+import { Text, View, TextInput, ActivityIndicator, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AccountService from '@/api/services/account/AccountService';
 import PrimaryAlert from '@/components/alerts/primary-alert';
+import SettingsLayout from '@/layouts/SettingsLayout';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import tw from 'twrnc';
 
 type AlertType = 'success' | 'error' | 'warning' | 'info';
 
@@ -100,17 +100,6 @@ const Security = () => {
   const [loading, setLoading] = useState(false);
   const [alertInfo, setAlertInfo] = useState<AlertInfo>({ message: '', type: 'info' });
   const accountService = new AccountService();
-
-  const checkRequiredPasswordChange = async () => {
-    const requiresPasswordChange = await AsyncStorage.getItem('requiresPasswordChange');
-    if (requiresPasswordChange === 'true') {
-      setActiveTab('pm');
-      setAlertInfo({
-        message: 'Password change is required',
-        type: 'warning'
-      });
-    }
-  };
 
   const handlePasswordUpdate = async () => {
     if (!validatePasswords()) return;
@@ -217,16 +206,6 @@ const Security = () => {
     return true;
   };
 
-  if (loading) {
-    return (
-      <SettingsLayout title="Security">
-        <View style={tw`flex-1 justify-center items-center`}>
-          <ActivityIndicator size="large" color="#29A1AF" />
-        </View>
-      </SettingsLayout>
-    );
-  }
-
   return (
     <SettingsLayout title="Security">
       <View style={tw`flex-1 bg-gray-50`}>
@@ -262,15 +241,21 @@ const Security = () => {
                   title="Two-Factor Authentication" 
                   description="Add an extra layer of security to your account by enabling two-factor authentication."
                 />
-                <View style={tw`flex-row justify-between items-center bg-gray-50 p-4 rounded-xl`}>
-                  <Text style={tw`text-gray-700 font-medium`}>Enable 2FA</Text>
-                  <Switch
-                    value={isTwoFactorEnabled}
-                    onValueChange={handleToggle2FA}
-                    trackColor={{ false: "#CBD5E1", true: "#29A1AF" }}
-                    ios_backgroundColor="#CBD5E1"
-                  />
-                </View>
+                {loading ? (
+                  <View style={tw`p-4 items-center`}>
+                    <ActivityIndicator size="small" color="#29A1AF" />
+                  </View>
+                ) : (
+                  <View style={tw`flex-row justify-between items-center bg-gray-50 p-4 rounded-xl`}>
+                    <Text style={tw`text-gray-700 font-medium`}>Enable 2FA</Text>
+                    <Switch
+                      value={isTwoFactorEnabled}
+                      onValueChange={handleToggle2FA}
+                      trackColor={{ false: "#CBD5E1", true: "#29A1AF" }}
+                      ios_backgroundColor="#CBD5E1"
+                    />
+                  </View>
+                )}
               </SectionCard>
             )}
 
@@ -299,8 +284,9 @@ const Security = () => {
                   secureTextEntry
                 />
                 <CustomButton
-                  title="Update Password"
+                  title={loading ? "Updating..." : "Update Password"}
                   onPress={handlePasswordUpdate}
+                  disabled={loading}
                 />
               </SectionCard>
             )}
@@ -317,16 +303,17 @@ const Security = () => {
                     onValueChange={setIsDeleteConfirmed}
                     trackColor={{ false: "#CBD5E1", true: "#EF4444" }}
                     ios_backgroundColor="#CBD5E1"
+                    disabled={loading}
                   />
                   <Text style={tw`ml-3 text-gray-700`}>
                     I understand this action is irreversible
                   </Text>
                 </View>
                 <CustomButton
-                  title="Delete Account"
+                  title={loading ? "Deleting..." : "Delete Account"}
                   onPress={handleAccountDeletion}
                   variant="danger"
-                  disabled={!isDeleteConfirmed}
+                  disabled={!isDeleteConfirmed || loading}
                 />
               </SectionCard>
             )}
