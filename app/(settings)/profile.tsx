@@ -54,9 +54,24 @@ const Profile = () => {
     try {
       setIsLoading(true);
       setError('');
-      const response = await profileService.getUserProfile();
-      if (response.success) {
-        setProfile(response.data);
+      const response: any = await profileService.getUserProfile();
+      console.log("response from api: ", response.data);
+      if (response.data) {
+        const { personDetails, email, payoutAccounts } = response.data;
+        const profileData: ProfileInfo = {
+          firstName: personDetails.firstName,
+          lastName: personDetails.lastName,
+          email: email,
+          dateOfBirth: personDetails.dob,
+          country: personDetails.country,
+          gender: personDetails.gender,
+          phoneNumber: personDetails.phoneNumber,
+          city: personDetails.city,
+          address: personDetails.address,
+          languages: personDetails.languages,
+          payoutAccounts: payoutAccounts,
+        };
+        setProfile(profileData);
       } else {
         setError(response.message || 'Failed to fetch profile');
       }
