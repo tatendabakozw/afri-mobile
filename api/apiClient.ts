@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@/utils/apiUrl';
-// import { handleLogout } from '../utils/logout';
+import { handleLogout } from '../utils/logout';
 
 interface ApiResponseError {
     message: string;
@@ -66,7 +66,7 @@ const apiClient = (baseUrl: string = API_URL): AxiosInstance => {
                 error.response?.status === 401 &&
                 (error.response.data.message === "jwt expired" || error.response.data.message === "invalid/missing authorization")
             ) {
-                // handleLogout();
+                handleLogout();
                 return Promise.reject(new Error('Session expired.'));
             }
 

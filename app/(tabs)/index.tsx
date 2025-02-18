@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import GeneralLayout from '@/layouts/GeneralLayout';
 import AbstractBG from '@/components/svgs/AbstractBG';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TabOneScreen() {
   const router = useRouter()
@@ -34,6 +35,15 @@ export default function TabOneScreen() {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const logToken = async () => {
+      const token = await AsyncStorage.getItem('accessToken');
+      console.log('Token:', token);
+    };
+    logToken();
+  }, []);
+
   return (
     <GeneralLayout>
       <ScrollView style={tw`flex-1`}>

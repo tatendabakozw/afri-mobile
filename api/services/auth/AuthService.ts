@@ -1,6 +1,7 @@
 import { AxiosInstance, AxiosResponse } from 'axios';
 import { ApiResponse, UserRegistrationPayload, UserLoginPayload, EmailVerificationPayload, ResendVerificationPayload } from "@/utils/Types";
 import apiClient from '@/api/apiClient';
+import { saveTokens } from '@/helpers/saveTokens';
 
 interface APIError {
     response?: {
@@ -46,6 +47,9 @@ class AuthService {
     async loginUser(payload: UserLoginPayload): Promise<ApiResponse> {
         try {
             const response: AxiosResponse<ApiResponse> = await this.client.post('/user/login', payload);
+            // console.log("data from login ",response.data);
+            const { accessToken, jwt, refreshToken } = response.data.data;
+            await saveTokens(accessToken, jwt, refreshToken);
             return response.data;
         } catch (error: any) {
             if (!error.message) {
