@@ -33,10 +33,10 @@ const SurveysList = () => {
     const fetchSurveys = useMemo(() => async () => {
         setLoading(true);
         let fetchedSurveys: Survey[] = [];
-      
+
         try {
             const [
-                internalResponse, 
+                internalResponse,
                 // featuredResponse, 
                 // cintResponse,
                 // tolunaRegResponse
@@ -46,8 +46,8 @@ const SurveysList = () => {
                 // new DiyService().fetchUserEligibleCintProjects(),
                 // new ProjectService().checkTolunaRegistration()
             ]);
-      
-      
+
+
             // const tolunaRegSurveys = tolunaRegResponse.data.status ? tolunaRegResponse.data.surveys.map((project: any, index: number) => ({
             //     id: project.SurveyID,
             //     projectCode: project.SurveyID,
@@ -61,7 +61,7 @@ const SurveysList = () => {
             //     url: decodeURIComponent(project.URL)
             // })) 
             // : [];
-      
+
             const mainSurveys = internalResponse.data.map((project: any, index: number) => ({
                 id: index + 1,
                 projectCode: project.projectCode,
@@ -71,9 +71,9 @@ const SurveysList = () => {
                 duration: project.duration,
                 // expires: t('surveyList.expires_in'),
                 type: 'main' as const,
-                projectType:"main_projects"
+                projectType: "main_projects"
             }));
-      
+
             // const featuredSurveys = featuredResponse?.data?.data?.map((project: any, index: number) => ({
             //     id: mainSurveys.length + index + 1,
             //     projectCode: project.projectCode,
@@ -87,7 +87,7 @@ const SurveysList = () => {
             //     surveyHostingType: project?.surveyHostingType,
             //     projectType:"diy_projects"
             // }));
-      
+
             // const cintSurveys = cintResponse?.data?.data?.map((project: any, index: number) => ({
             //     id: mainSurveys.length + index + 1,
             //     projectCode: project.projectCode,
@@ -102,9 +102,9 @@ const SurveysList = () => {
             //     page:"",
             //     projectType:"cint_projects"
             // }));
-      
+
             fetchedSurveys = [
-                ...mainSurveys, 
+                ...mainSurveys,
                 // ...(tolunaRegSurveys || []), 
                 // ...(featuredSurveys || []), 
                 // ...(cintSurveys || [])
@@ -112,10 +112,10 @@ const SurveysList = () => {
         } catch (error: any) {
             setAlert({ message: error.message, type: 'error' });
         }
-      
+
         setSurveys(fetchedSurveys);
         setLoading(false);
-      }, []);
+    }, []);
 
     useEffect(() => {
         fetchSurveys();
@@ -133,36 +133,14 @@ const SurveysList = () => {
             </View>
 
             {/* Survey Rows */}
-            {[
-                {
-                    id: 1,
-                    title: "Consumer Habits Survey",
-                    amount: 2.50,
-                    duration: "10 min",
-                    startDate: "Now"
-                },
-                {
-                    id: 2,
-                    title: "Technology Usage Study",
-                    amount: 3.75,
-                    duration: "15 min",
-                    startDate: "In 2h"
-                },
-                {
-                    id: 3,
-                    title: "Shopping Experience",
-                    amount: 1.50,
-                    duration: "5 min",
-                    startDate: "Today"
-                }
-            ].map((survey, index) => (
+            {surveys?.map((survey, index) => (
                 <TouchableOpacity
                     key={survey.id}
                     style={tw`flex flex-row items-center p-3 rounded-xl w-full  ${index % 2 === 0 ? 'bg-zinc-200/50' : ''
                         }`}
                 >
                     <Text style={tw`flex-1 text-left text-gray-950 font-bold`}>
-                        ${survey.amount.toFixed(2)}
+                        {survey.amount}
                     </Text>
                     <Text style={tw`flex-1 text-center text-gray-600`}>
                         {survey.duration}
