@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import tw from 'twrnc'
 import { Ionicons } from '@expo/vector-icons';
 import ProjectService from '@/api/services/project/ProjectService';
+import SurveyLoading from '@/components/loading-components/survey-loading';
 
 type Survey = {
     id: number;
@@ -121,8 +122,6 @@ const SurveysList = () => {
         fetchSurveys();
     }, [fetchSurveys]);
 
-    console.log("surveys from api: ", surveys)
-
     return (
         <View style={tw`flex flex-col overflow-hidden`}>
             {/* Table Header */}
@@ -133,23 +132,31 @@ const SurveysList = () => {
             </View>
 
             {/* Survey Rows */}
-            {surveys?.map((survey, index) => (
-                <TouchableOpacity
-                    key={survey.id}
-                    style={tw`flex flex-row items-center p-3 rounded-xl w-full  ${index % 2 === 0 ? 'bg-zinc-200/50' : ''
-                        }`}
-                >
-                    <Text style={tw`flex-1 text-left text-gray-950 font-bold`}>
-                        {survey.amount}
-                    </Text>
-                    <Text style={tw`flex-1 text-center text-gray-600`}>
-                        {survey.duration}
-                    </Text>
-                    <Text style={tw`flex-1 text-right text-gray-600`}>
-                        <Ionicons name="chevron-forward" size={24} color="#32B3C2" />
-                    </Text>
-                </TouchableOpacity>
-            ))}
+            {loading ? (
+                <SurveyLoading />
+            ) : surveys.length > 0 ? (
+                surveys.map((survey, index) => (
+                    <TouchableOpacity
+                        key={survey.id}
+                        style={tw`flex flex-row items-center p-3 rounded-xl w-full ${index % 2 === 0 ? 'bg-zinc-200/50' : ''
+                            }`}
+                    >
+                        <Text style={tw`flex-1 text-left text-gray-950 font-bold`}>
+                            ${survey.amount}
+                        </Text>
+                        <Text style={tw`flex-1 text-center text-gray-600`}>
+                            {survey.duration}
+                        </Text>
+                        <Text style={tw`flex-1 text-right text-gray-600`}>
+                            <Ionicons name="chevron-forward" size={24} color="#32B3C2" />
+                        </Text>
+                    </TouchableOpacity>
+                ))
+            ) : (
+                <View style={tw`py-8 items-center`}>
+                    <Text style={tw`text-gray-500 text-base`}>No surveys available</Text>
+                </View>
+            )}
         </View>
     )
 }
