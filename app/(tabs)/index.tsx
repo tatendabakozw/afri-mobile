@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import GeneralLayout from '@/layouts/GeneralLayout';
 import AbstractBG from '@/components/svgs/AbstractBG';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import BannerComponent from '@/components/page-sections/home-page/banner-component';
 
 export default function TabOneScreen() {
   const router = useRouter()
@@ -47,29 +48,11 @@ export default function TabOneScreen() {
   return (
     <GeneralLayout>
       <ScrollView style={tw`flex-1`}>
-        <View style={[tw`p-4`, styles.container]}>
+        <View style={[tw`p-4 pb-32`, styles.container]}>
           {/* <Text style={styles.title}>Tab One</Text>
         <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
         <EditScreenInfo path="app/(tabs)/index.tsx" /> */}
-          <View style={tw`w-full bg-[#32B3C2] rounded-2xl  relative overflow-hidden`}>
-            <AbstractBG style={StyleSheet.absoluteFill} width="100%" height="100%" />
-            <View style={tw`flex flex-col gap-1 p-4`}>
-              <View style={tw`flex flex-row items-center gap-4 justify-between w-full`}>
-                <Text style={tw`text-white font-bold text-lg`}>Hello, User</Text>
-                <Text style={tw`text-white font-bold text-lg`}>USD 0.00</Text>
-              </View>
-              <Text style={tw`text-white`}>Minimum Withdrawal amount <Text style={tw`text-white font-bold`}>USD 5</Text></Text>
-              <Text style={tw`text-white`}>Explore our selectoin of available surveys and start earniing rewards today!</Text>
-              <View style={tw`flex flex-row items-center ml-auto gap-2 w-full`}>
-                <TouchableOpacity style={tw`bg-white text-xs font-semibold rounded-xl ml-auto px-3 py-2`}>
-                  <Text style={tw`text-bold text-[#32B3C2]`}>Rewards</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={tw`bg-white text-xs font-semibold rounded-xl px-3 py-2`}>
-                  <Text style={tw`text-bold text-[#32B3C2]`}>Payouts</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
+          <BannerComponent />
           {/*TODO: Auto cycling Tips */}
           <View style={tw`bg-zinc-200/50 rounded-xl border border-zinc-200/50 p-4 mt-4`}>
             <View style={tw`flex flex-row items-center justify-between mb-2`}>
@@ -171,7 +154,7 @@ export default function TabOneScreen() {
                     {survey.duration}
                   </Text>
                   <Text style={tw`flex-1 text-right text-gray-600`}>
-                  <Ionicons name="chevron-forward" size={24} color="#32B3C2" />
+                    <Ionicons name="chevron-forward" size={24} color="#32B3C2" />
                   </Text>
                 </TouchableOpacity>
               ))}

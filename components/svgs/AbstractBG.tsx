@@ -3,6 +3,11 @@ import Svg, { Path } from "react-native-svg"
 const AbstractBG = (props:any) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 100 100"
+    style={[
+        { width: '100%', height: '100%' },
+        props.style
+    ]}
     width={400}
     height={400}
     fill="none"
