@@ -1,7 +1,7 @@
-import React from 'react'
-import AbstractBG from '@/components/svgs/AbstractBG'
-import tw from 'twrnc'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import AbstractBG from '@/components/svgs/AbstractBG'
+import React from 'react'
+import tw from 'twrnc'
 
 type Props = {
     username?: string
@@ -10,7 +10,7 @@ type Props = {
 
 const BannerComponent = ({ username = 'User', balance = 0.00 }: Props) => {
     return (
-        <View style={tw`w-full bg-[#32B3C2] rounded-3xl relative overflow-hidden my-4 shadow-lg`}>
+        <View style={tw`w-full bg-[#32B3C2] rounded-3xl relative overflow-hidden mb-4 shadow-lg`}>
             <View style={[
                 StyleSheet.absoluteFill,
                 tw`w-full h-full opacity-50`
@@ -21,15 +21,15 @@ const BannerComponent = ({ username = 'User', balance = 0.00 }: Props) => {
                     ]}
                 />
             </View>
-            <View style={tw`flex flex-col gap-6 p-6`}>
+            <View style={tw`flex flex-col gap-4 p-6`}>
                 {/* Header Section */}
                 <View style={tw`flex flex-row items-center justify-between w-full`}>
                     <View>
-                        <Text style={tw`text-white/70 text-sm mb-1`}>Welcome back</Text>
+                        <Text style={tw`text-white/70 text-sm`}>Welcome back</Text>
                         <Text style={tw`text-white font-bold text-xl`}>{username}</Text>
                     </View>
                     <View>
-                        <Text style={tw`text-white/70 text-sm mb-1`}>Balance</Text>
+                        <Text style={tw`text-white/70 text-sm`}>Balance</Text>
                         <Text style={tw`text-white font-bold text-xl`}>
                             ${balance.toFixed(2)}
                         </Text>
@@ -49,7 +49,7 @@ const BannerComponent = ({ username = 'User', balance = 0.00 }: Props) => {
                 {/* Actions Section */}
                 <View style={tw`flex flex-row items-center gap-3 w-full`}>
                     <TouchableOpacity
-                        style={tw`flex-1 bg-white rounded-xl px-4 py-3 shadow-sm`}
+                        style={tw` bg-white rounded-xl px-4 py-3 shadow-sm ml-auto`}
                         activeOpacity={0.8}
                     >
                         <Text style={tw`text-[#32B3C2] font-semibold text-center`}>
@@ -57,7 +57,7 @@ const BannerComponent = ({ username = 'User', balance = 0.00 }: Props) => {
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={tw`flex-1 bg-white/10 rounded-xl px-4 py-3 border border-white/20`}
+                        style={tw` bg-white/10 rounded-xl px-4 py-3 border border-white/20`}
                         activeOpacity={0.8}
                     >
                         <Text style={tw`text-white font-semibold text-center`}>
