@@ -142,7 +142,7 @@ const SurveysList = () => {
                             }`}
                     >
                         <Text style={tw`flex-1 text-left text-gray-950 font-bold`}>
-                            ${survey.amount}
+                            {survey.amount}
                         </Text>
                         <Text style={tw`flex-1 text-center text-gray-600`}>
                             {survey.duration}
