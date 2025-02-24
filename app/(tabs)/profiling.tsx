@@ -1,12 +1,12 @@
 import { Text, View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native'
+import ProfilingService from '@/api/services/profiling/ProfilingService'
+import PrimaryButton from '@/components/buttons/primary-button'
 import React, { useEffect, useState } from 'react'
 import GeneralLayout from '@/layouts/GeneralLayout'
-import { Ionicons } from '@expo/vector-icons'
-import tw from 'twrnc'
-import PrimaryButton from '@/components/buttons/primary-button'
-import ProfilingService from '@/api/services/profiling/ProfilingService'
-import { router } from 'expo-router'
 import { useLanguage } from '@/hooks/useLanguage'
+import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
+import tw from 'twrnc'
 
 interface Option {
   id: string
@@ -36,6 +36,7 @@ const mapQuestionType = (
     case "multiple_choice":
       return "multi-select";
     case "open_text":
+      return "open-text"
     default:
       return "open-text";
   }
@@ -57,7 +58,7 @@ const Profiling = () => {
       const translation = translations.find(
         (trans) => trans.questionId === option.questionId && trans.language === language && trans.answerOptionId === option.id
       );
-  
+
       return {
         id: option.id.toString(),
         text: translation ? translation.label : option.label || option.option,
@@ -66,33 +67,33 @@ const Profiling = () => {
       };
     });
   };
-  
-  
+
+
   const mapAnsweredQuestions = (answeredQuestions: any[]): Question[] => {
     return answeredQuestions.map((question) => {
       // Find the translation for the current question and language
       const translation = question.questionTranslations.find(
-          (trans:any) => trans.questionId === question.questionId && trans.language === language
+        (trans: any) => trans.questionId === question.questionId && trans.language === language
       );
-  
+
       return {
         id: question.questionId.toString(),
         text: translation ? translation.translatedText : question.question,
         type: mapQuestionType(question.questionType),
-        options:( question.answerOptions||question.answerOptionsTranslations) ? mapOptions(question.answerOptions,question.answerOptionsTranslations) : undefined,
+        options: (question.answerOptions || question.answerOptionsTranslations) ? mapOptions(question.answerOptions, question.answerOptionsTranslations) : undefined,
         answerFormat: question.answerType,
         answer: question.answer,
       };
     });
   };
-  
+
   const mapUnansweredQuestions = (unansweredQuestions: any[]): Question[] => {
     return unansweredQuestions.map((question) => {
       const translation = question.translations.find(
         (trans: any) => trans.questionId === question.questionId && trans.language === language
       );
-  
-  
+
+
       return {
         id: question.questionId.toString(),
         text: translation ? translation.translatedText : question.question,
@@ -153,7 +154,7 @@ const Profiling = () => {
       if (currentSelection.includes(value)) {
         return {
           ...prev,
-          [questionId]: currentSelection.filter((v:any) => v !== value)
+          [questionId]: currentSelection.filter((v: any) => v !== value)
         }
       } else {
         let newSelection = [...currentSelection, value]
@@ -169,6 +170,7 @@ const Profiling = () => {
   }
 
   const handleInputChange = (questionId: string, value: string, format?: string) => {
+    // Handle "Prefer not to say" selection
     if (value === 'PREFER_NOT_TO_SAY') {
       setResponses(prev => ({
         ...prev,
@@ -176,11 +178,53 @@ const Profiling = () => {
       }))
       return
     }
-
-    if (format && !validateInput(value, format) && value !== '') {
+  
+    // For empty input, just update the value
+    if (value === '') {
+      setResponses(prev => ({
+        ...prev,
+        [questionId]: value
+      }))
       return
     }
-
+  
+    // Validate input based on format
+    if (format) {
+      switch (format) {
+        case 'time':
+          // Allow partial time input (while typing)
+          if (!/^([0-9]|[0-1][0-9]|2[0-3])?(:[0-5]?[0-9]?)?$/.test(value)) {
+            return
+          }
+          break
+        case 'date':
+          // Allow partial date input (while typing)
+          if (!/^\d{0,4}(-?\d{0,2})?(-?\d{0,2})?$/.test(value)) {
+            return
+          }
+          break
+        case 'float':
+          // Allow decimal numbers
+          if (!/^\d*\.?\d*$/.test(value)) {
+            return
+          }
+          break
+        case 'integer':
+          // Allow only numbers
+          if (!/^\d*$/.test(value)) {
+            return
+          }
+          break
+        case 'number':
+          // Allow both integer and decimal
+          if (!/^\d*\.?\d*$/.test(value)) {
+            return
+          }
+          break
+      }
+    }
+  
+    // Update the response
     setResponses(prev => ({
       ...prev,
       [questionId]: value
@@ -215,7 +259,14 @@ const Profiling = () => {
       const profilingService = new ProfilingService()
       // await profilingService.submitProfilingAnswers(submissionData)
 
-      router.push('/(tabs)')
+      // Only navigate away if it's the last question
+      if (currentQuestion === surveyData.length - 1) {
+        router.push('/(tabs)')
+      } else {
+        // Show success message for intermediary saves
+        // You might want to add a toast or some visual feedback here
+        setCurrentQuestion(prev => prev + 1)
+      }
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -332,9 +383,7 @@ const Profiling = () => {
 
         <View style={tw`flex-row items-center justify-between mb-6`}>
           <Text style={tw`text-xl font-bold text-gray-800`}>Profile Setup</Text>
-          <Text style={tw`text-gray-500`}>
-            {currentQuestion + 1} of {surveyData.length}
-          </Text>
+
         </View>
 
         {surveyData.length > 0 ? (
@@ -346,28 +395,36 @@ const Profiling = () => {
               {renderQuestion(surveyData[currentQuestion])}
             </View>
 
-            <View style={tw`flex-row justify-between mt-6`}>
+            <View style={tw`flex-col gap-4 mt-6`}>
+              {/* Save Button - Always visible and prominent */}
               <PrimaryButton
-                title="Previous"
-                onPress={() => setCurrentQuestion(prev => prev - 1)}
-                style={tw`flex-1 mr-2 ${currentQuestion === 0 ? 'opacity-50' : ''}`}
-                disabled={currentQuestion === 0 || submitting}
+                title={submitting ? 'Saving...' : 'Save Answers'}
+                onPress={handleSubmit}
+                style={tw`w-full bg-[#32B3C2]`}
+                disabled={submitting}
+                loading={submitting}
               />
-              {currentQuestion === surveyData.length - 1 ? (
+
+              {/* Navigation Buttons */}
+              <View style={tw`flex-row items-center justify-between gap-2`}>
                 <PrimaryButton
-                  title={submitting ? 'Submitting...' : 'Submit'}
-                  onPress={handleSubmit}
-                  style={tw`flex-1 ml-2`}
-                  disabled={submitting}
+                  title="Previous"
+                  onPress={() => setCurrentQuestion(prev => prev - 1)}
+                  style={tw`flex-1 ${currentQuestion === 0 ? 'opacity-50' : ''}`}
+                  disabled={currentQuestion === 0 || submitting}
+                // variant="outline"
                 />
-              ) : (
-                <PrimaryButton
-                  title="Next"
-                  onPress={() => setCurrentQuestion(prev => prev + 1)}
-                  style={tw`flex-1 ml-2`}
-                  disabled={submitting}
-                />
-              )}
+
+                {currentQuestion < surveyData.length - 1 && (
+                  <PrimaryButton
+                    title="Next"
+                    onPress={() => setCurrentQuestion(prev => prev + 1)}
+                    style={tw`flex-1`}
+                    disabled={submitting}
+                  // variant="outline"
+                  />
+                )}
+              </View>
             </View>
           </>
         ) : (
