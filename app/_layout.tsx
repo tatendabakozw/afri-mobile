@@ -51,15 +51,31 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'light' ? DarkTheme : DefaultTheme}>
-     <LanguageProvider>
-     <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-        <Stack.Screen name="(settings)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-     </LanguageProvider>
+      <LanguageProvider>
+        <Stack>
+          <Stack.Screen
+            name="(auth)"
+            options={{ headerShown: false }}
+          />
+          {/* Only include routes that actually exist */}
+          <Stack.Screen
+            name="(payouts)"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="(settings)"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="(tabs)"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: 'modal' }}
+          />
+        </Stack>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }
