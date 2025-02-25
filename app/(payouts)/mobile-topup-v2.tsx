@@ -8,11 +8,12 @@ import SettingsLayout from '@/layouts/SettingsLayout'
 import { router } from 'expo-router'
 import React, { useState, useEffect } from 'react'
 import tw from 'twrnc'
+import PrimaryAlert from '@/components/alerts/primary-alert'
+import BalanceCard from '@/components/page-sections/payouts/balance-card'
 
 interface TopupState {
   loading: boolean
   error: string | null
-  balance: number
   selectedCountry: string
   phoneCode: number
   phoneNumber: string
@@ -26,13 +27,12 @@ interface TopupState {
 
 const COOLDOWN_DURATION = 10 * 60 * 1000 // 10 minutes
 const MIN_AMOUNT = 3.00
-const MAX_AMOUNT = 100.00
+const MAX_AMOUNT = 10.00
 
 const MobileTopupV2 = () => {
   const [state, setState] = useState<TopupState>({
     loading: false,
     error: null,
-    balance: 0,
     selectedCountry: countryOptions[0].value,
     phoneCode: countryOptions[0].phoneCode,
     phoneNumber: '',
@@ -45,7 +45,6 @@ const MobileTopupV2 = () => {
   })
 
   useEffect(() => {
-    fetchUserBalance()
     checkCooldown()
   }, [])
 
@@ -74,25 +73,6 @@ const MobileTopupV2 = () => {
     }
   }
 
-  const fetchUserBalance = async () => {
-    try {
-      const profileService = new ProfileService()
-      const response = await profileService.getUserRewardBalance()
-      if (response.success) {
-        setState(prev => ({
-          ...prev,
-          balance: response.data.rewardBalance,
-          loading: false
-        }))
-      }
-    } catch (error: any) {
-      setState(prev => ({
-        ...prev,
-        error: error.message,
-        loading: false
-      }))
-    }
-  }
   const verifyProvider = async () => {
     if (!state.phoneNumber || state.phoneNumber.length < 7) {
       Alert.alert('Error', 'Please enter a valid phone number')
@@ -197,7 +177,7 @@ const MobileTopupV2 = () => {
         {/* Header Section */}
         <View style={tw`mb-6`}>
           <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>
-            Mobile Top-up
+            Mobile Top-up via Sochitel
           </Text>
           <Text style={tw`text-gray-600 leading-5`}>
             Top up your mobile balance instantly using your earned rewards.
@@ -205,18 +185,11 @@ const MobileTopupV2 = () => {
         </View>
 
         {/* Balance Card */}
-        <View style={tw`bg-white rounded-xl p-6 mb-6 shadow-sm`}>
-          <Text style={tw`text-gray-500 mb-2`}>Available Balance</Text>
-          <Text style={tw`text-3xl font-bold text-gray-800`}>
-            ${state.balance.toFixed(2)}
-          </Text>
-        </View>
+        <BalanceCard minimumPayout={3} />
 
         {/* Error Message */}
         {state.error && (
-          <View style={tw`bg-red-50 p-4 rounded-xl mb-6`}>
-            <Text style={tw`text-red-600`}>{state.error}</Text>
-          </View>
+         <PrimaryAlert message={state.error} type='error' />
         )}
 
         {!state.providerVerified ? (

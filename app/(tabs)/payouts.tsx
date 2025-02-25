@@ -1,5 +1,5 @@
 import { Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import GeneralLayout from '@/layouts/GeneralLayout'
 import { Ionicons } from '@expo/vector-icons'
 import tw from 'twrnc'
@@ -7,6 +7,7 @@ import PrimaryButton from '@/components/buttons/primary-button'
 import ProfileService from '@/api/services/profile/ProfileService'
 import { router } from 'expo-router'
 import PayoutService from '@/api/services/payouts/PayoutService'
+import BalanceCard from '@/components/page-sections/payouts/balance-card'
 
 const PAYOUT_METHODS = [
   {
@@ -159,19 +160,7 @@ const Payouts = () => {
         </Text>
 
         {/* Balance Card */}
-        <View style={tw`bg-white rounded-xl p-6 mb-6 shadow-sm`}>
-          <Text style={tw`text-gray-500 mb-2`}>Available Balance</Text>
-          <Text style={tw`text-3xl font-bold text-gray-800`}>
-            ${balance.toFixed(2)}
-          </Text>
-          <View style={tw`flex-row items-center mt-4 bg-orange-50 p-3 rounded-lg`}>
-            <Ionicons name="warning-outline" size={20} color="#F97316" />
-            <Text style={tw`ml-2 text-orange-700`}>
-              Minimum withdrawal amount is ${minimumPayout}
-            </Text>
-          </View>
-        </View>
-
+        <BalanceCard minimumPayout={minimumPayout} />
         {/* Payment Methods */}
         <Text style={tw`text-lg font-bold text-gray-800 mb-4`}>
           Select Payment Method
