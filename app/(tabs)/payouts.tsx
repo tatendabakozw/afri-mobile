@@ -150,13 +150,13 @@ const Payouts = () => {
     <GeneralLayout>
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`p-4 pb-32`}>
         {/* Rewards heading */}
-        <Text style={tw`text-3xl font-bold text-gray-800 mb-2`}>Rewards</Text>
+        <Text style={tw`text-3xl font-bold text-gray-800 mb-2`}>Payout Methods</Text>
 
         {/* Rewards description */}
         <Text style={tw`text-gray-600 mb-6 leading-6`}>
-          Welcome to your rewards page! Here, you can track the
-          status of the surveys you've completed and the rewards
-          you've earned.
+        We support different payout methods. Depending on their availability in your country, you will find those available for you below. You can request a payout if you have reached the minimum amount. You can find the minimum amount per payment method below.
+
+
         </Text>
 
         {/* Balance Card */}
