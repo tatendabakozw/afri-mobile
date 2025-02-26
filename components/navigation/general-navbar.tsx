@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native'
 import React from 'react'
 import { StatusBar } from "expo-status-bar";
 import tw from 'twrnc'
@@ -21,8 +21,12 @@ const GeneralNavbar = () => {
         {/* Set StatusBar style to dark */}
         <StatusBar style="dark" />
         {/* Left section - can be used for branding/title */}
-        <View style={tw`p-2`}>
-          <Text style={tw`text-lg font-bold text-gray-800`}>Logo</Text>
+        <View style={tw``}>
+          <Image 
+            source={require('@/assets/images/icon.png')} 
+            style={tw`h-8 w-8`}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Middle Section with Online Status */}
