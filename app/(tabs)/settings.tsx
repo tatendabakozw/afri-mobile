@@ -1,11 +1,11 @@
 import { Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native'
-import React, { useState } from 'react'
-import { Ionicons } from '@expo/vector-icons'
-import tw from 'twrnc'
-import { router } from 'expo-router'
-import { handleLogout } from '@/utils/logout'
-import GeneralLayout from '@/layouts/GeneralLayout'
 import ConfirmationAlert from '@/components/alerts/confirmation-alert'
+import GeneralLayout from '@/layouts/GeneralLayout'
+import { Ionicons } from '@expo/vector-icons'
+import { handleLogout } from '@/utils/logout'
+import React, { useState } from 'react'
+import { router } from 'expo-router'
+import tw from 'twrnc'
 
 const Settings = () => {
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
@@ -40,7 +40,7 @@ const Settings = () => {
           id: 'profiling',
           title: 'Profiling Settings',
           icon: 'options-outline',
-          route: '/(settings)/profiling'
+          route: '/(tabs)/profiling'
         }
       ]
     }
