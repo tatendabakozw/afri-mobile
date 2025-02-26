@@ -1,6 +1,11 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import HomeIcon from '@/components/svgs/icons/HomeIcon';
+import UserIcon from '@/components/svgs/icons/UserIcon';
+import WalletIcon from '@/components/svgs/icons/WalletIcon';
+import RewardsIcon from '@/components/svgs/icons/RewardsIcon';
+import SettingsIcon from '@/components/svgs/icons/SettingsIcon';
 
 export default function TabLayout() {
   return (
@@ -29,7 +34,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+            <HomeIcon fill={color} size={size} />
           ),
         }}
       />
@@ -38,7 +43,7 @@ export default function TabLayout() {
         options={{
           title: "Profiling",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <UserIcon fill={color} size={size} />
           ),
         }}
       />
@@ -47,7 +52,7 @@ export default function TabLayout() {
         options={{
           title: "Payouts",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="wallet" size={size} color={color} />
+            <WalletIcon fill={color} size={size} />
           ),
         }}
       />
@@ -56,16 +61,17 @@ export default function TabLayout() {
         options={{
           title: "Rewards",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="gift" size={size} color={color} />
+            <RewardsIcon fill={color} size={size} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" size={size} color={color} />
+            <SettingsIcon fill={color} size={size} />
           ),
         }}
       />
