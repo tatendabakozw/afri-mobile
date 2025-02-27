@@ -1,9 +1,12 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useEffect, useMemo, useState } from 'react'
 import tw from 'twrnc'
 import { Ionicons } from '@expo/vector-icons';
 import ProjectService from '@/api/services/project/ProjectService';
 import SurveyLoading from '@/components/loading-components/survey-loading';
+import DiyService from '@/api/services/diy/DiyService';
+import { encryptData } from '@/helpers/encryption';
+import { useRouter } from 'expo-router';
 
 type Survey = {
     id: number;
@@ -24,13 +27,10 @@ type Survey = {
 
 const SurveysList = () => {
 
-    const [currentPage, setCurrentPage] = useState(1);
     const [surveys, setSurveys] = useState<Survey[]>([]);
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
-
-    const surveysPerPage = 3;
-
+    const router = useRouter()
     const fetchSurveys = useMemo(() => async () => {
         setLoading(true);
         let fetchedSurveys: Survey[] = [];
@@ -38,30 +38,30 @@ const SurveysList = () => {
         try {
             const [
                 internalResponse,
-                // featuredResponse, 
-                // cintResponse,
-                // tolunaRegResponse
+                featuredResponse, 
+                cintResponse,
+                tolunaRegResponse
             ] = await Promise.all([
                 new ProjectService().fetchEligibleProjects(),
-                // new DiyService().fetchUserEligibleDIYProjects(),
-                // new DiyService().fetchUserEligibleCintProjects(),
-                // new ProjectService().checkTolunaRegistration()
+                new DiyService().fetchUserEligibleDIYProjects(),
+                new DiyService().fetchUserEligibleCintProjects(),
+                new ProjectService().checkTolunaRegistration()
             ]);
 
 
-            // const tolunaRegSurveys = tolunaRegResponse.data.status ? tolunaRegResponse.data.surveys.map((project: any, index: number) => ({
-            //     id: project.SurveyID,
-            //     projectCode: project.SurveyID,
-            //     countryCode: '',
-            //     deviceRestrictions: [],
-            //     amount: project.MemberAmount,
-            //     duration: project.Duration,
-            //     expires: t('surveyList.expires_in'),
-            //     type: 'main' as const,
-            //     projectType: "tolune_reg",
-            //     url: decodeURIComponent(project.URL)
-            // })) 
-            // : [];
+            const tolunaRegSurveys = tolunaRegResponse.data.status ? tolunaRegResponse.data.surveys.map((project: any, index: number) => ({
+                id: project.SurveyID,
+                projectCode: project.SurveyID,
+                countryCode: '',
+                deviceRestrictions: [],
+                amount: project.MemberAmount,
+                duration: project.Duration,
+                // expires: t('surveyList.expires_in'),
+                type: 'main' as const,
+                projectType: "tolune_reg",
+                url: decodeURIComponent(project.URL)
+            })) 
+            : [];
 
             const mainSurveys = internalResponse.data.map((project: any, index: number) => ({
                 id: index + 1,
@@ -75,40 +75,40 @@ const SurveysList = () => {
                 projectType: "main_projects"
             }));
 
-            // const featuredSurveys = featuredResponse?.data?.data?.map((project: any, index: number) => ({
-            //     id: mainSurveys.length + index + 1,
-            //     projectCode: project.projectCode,
-            //     projectId: project.projectId,
-            //     countryCode: project.countryCode,
-            //     deviceRestrictions: project.deviceRestrictions,
-            //     amount: project.amount,
-            //     duration: project.duration,
-            //     expires: t('surveyList.expires_in'),
-            //     type: 'featured' as const,
-            //     surveyHostingType: project?.surveyHostingType,
-            //     projectType:"diy_projects"
-            // }));
+            const featuredSurveys = featuredResponse?.data?.data?.map((project: any, index: number) => ({
+                id: mainSurveys.length + index + 1,
+                projectCode: project.projectCode,
+                projectId: project.projectId,
+                countryCode: project.countryCode,
+                deviceRestrictions: project.deviceRestrictions,
+                amount: project.amount,
+                duration: project.duration,
+                // expires: t('surveyList.expires_in'),
+                type: 'featured' as const,
+                surveyHostingType: project?.surveyHostingType,
+                projectType:"diy_projects"
+            }));
 
-            // const cintSurveys = cintResponse?.data?.data?.map((project: any, index: number) => ({
-            //     id: mainSurveys.length + index + 1,
-            //     projectCode: project.projectCode,
-            //     projectId: project.projectId,
-            //     countryCode: project.countryCode,
-            //     deviceRestrictions: project.deviceRestrictions,
-            //     amount: project.amount,
-            //     duration: project.duration,
-            //     expires: t('surveyList.expires_in'),
-            //     type: 'featured' as const,
-            //     surveyHostingType: project?.surveyHostingType,
-            //     page:"",
-            //     projectType:"cint_projects"
-            // }));
+            const cintSurveys = cintResponse?.data?.data?.map((project: any, index: number) => ({
+                id: mainSurveys.length + index + 1,
+                projectCode: project.projectCode,
+                projectId: project.projectId,
+                countryCode: project.countryCode,
+                deviceRestrictions: project.deviceRestrictions,
+                amount: project.amount,
+                duration: project.duration,
+                // expires: t('surveyList.expires_in'),
+                type: 'featured' as const,
+                surveyHostingType: project?.surveyHostingType,
+                page:"",
+                projectType:"cint_projects"
+            }));
 
             fetchedSurveys = [
                 ...mainSurveys,
-                // ...(tolunaRegSurveys || []), 
-                // ...(featuredSurveys || []), 
-                // ...(cintSurveys || [])
+                ...(tolunaRegSurveys || []), 
+                ...(featuredSurveys || []), 
+                ...(cintSurveys || [])
             ];
         } catch (error: any) {
             setAlert({ message: error.message, type: 'error' });
@@ -117,6 +117,36 @@ const SurveysList = () => {
         setSurveys(fetchedSurveys);
         setLoading(false);
     }, []);
+
+    const handleStartSurvey =async (survey: Survey) => {
+        const data = survey.type === 'featured' ? {
+            projectCode: survey.projectCode,
+            projectId: survey.projectId,
+            countryCode: survey.countryCode,
+            deviceRestrictions: survey.deviceRestrictions,
+            surveyHostingType: survey.surveyHostingType
+        } : {
+            projectCode: survey.projectCode,
+            projectId: survey.projectId,
+            countryCode: survey.countryCode,
+            deviceRestrictions: survey.deviceRestrictions,
+        };
+
+        const encodedData = await encryptData(data);
+
+        if (survey.projectType === 'cint_projects') {
+            router.push(`/(redirects)/cint-enrollment?data=${encodeURIComponent(encodedData)}`);
+            return;
+        }
+
+        if (survey.projectType === 'tolune_reg') {
+            // Handle external URL opening in React Native
+            Linking.openURL(survey.url);
+            return;
+        }
+
+        router.push(`/(redirects)/enrollment?data=${encodeURIComponent(encodedData)}`);
+    };
 
     useEffect(() => {
         fetchSurveys();
@@ -137,6 +167,7 @@ const SurveysList = () => {
             ) : surveys.length > 0 ? (
                 surveys.map((survey, index) => (
                     <TouchableOpacity
+                    onPress={() => handleStartSurvey(survey)}
                         key={survey.id}
                         style={tw`flex flex-row items-center p-3 rounded-xl w-full ${index % 2 === 0 ? 'bg-zinc-200/50' : ''
                             }`}
