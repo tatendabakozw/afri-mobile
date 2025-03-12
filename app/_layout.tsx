@@ -66,6 +66,10 @@ function RootLayoutNav() {
             name="(redirects)"
             options={{ headerShown: false }}
           />
+            <Stack.Screen
+            name="(results)"
+            options={{ headerShown: false }}
+          />
           <Stack.Screen
             name="(settings)"
             options={{ headerShown: false }}

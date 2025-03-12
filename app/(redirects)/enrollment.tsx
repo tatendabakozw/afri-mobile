@@ -92,9 +92,9 @@ const FeatureSurveyScreening = () => {
         }
     };
 
-    const redirectToResult = (projectCode: string, status: string) => {
-        const encryptedStatus = encryptData({ projectCode, status });
-        // router.push(`/survey/result?data=${encodeURIComponent(encryptedStatus)}`);
+    const redirectToResult = async (projectCode: string, status: string) => {
+        const encryptedStatus = await encryptData({ projectCode, status });
+        router.push(`/(results)/index?data=${encodeURIComponent(encryptedStatus)}`);
     };
 
     const redirectToExternalSite = (url: string) => {
