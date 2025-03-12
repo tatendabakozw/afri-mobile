@@ -5,13 +5,13 @@ import tw from 'twrnc';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import WebView from 'react-native-webview';
-import DiyService from '@/api/services/diy/DiyService';
 import { decryptData, encryptData } from '@/helpers/encryption';
 import PrimaryAlert from '@/components/alerts/primary-alert';
 import getGeoIp from '@/utils/geo-ip';
 import QuestionItem from '@/components/question-item/question-item';
 import QualificationService from '@/api/services/qualification/QualificationService';
 import EnrollmentLayout from '@/layouts/EnrollmentLayout';
+import ConfirmationAlert from '@/components/alerts/confirmation-alert';
 
 interface Translation {
     language: string;
@@ -63,7 +63,6 @@ const FeatureSurveyScreening = () => {
     const [globalHostingType, setGlobalHostingType] = useState<string>('');
     const [redirecting, setRedirecting] = useState<boolean>(false);
 
-    const diyService = new DiyService();
     const qualificationService = new QualificationService();
 
     const fetchGeoIpDetails = async (): Promise<void> => {
@@ -92,11 +91,9 @@ const FeatureSurveyScreening = () => {
     const handleCopy = async () => {
         try {
             await Clipboard.setStringAsync(params.url as string);
-            setCopySuccess("t('preScreening.copy_link_success')");
-            setTimeout(() => setCopySuccess(null), 3000);
+            setCopySuccess("Link copied successfully!");
         } catch (error) {
-            setCopySuccess("t('preScreening.copy_link_failure')");
-            setTimeout(() => setCopySuccess(null), 3000);
+            setCopySuccess("Failed to copy link.");
         }
     };
 
@@ -128,86 +125,74 @@ const FeatureSurveyScreening = () => {
 
     const handleSubmit = async () => {
         try {
-            if (hasIncompleteAnswers()) {
-                setAlert({ type: 'error', message: "All questions are mandatory" });
-                return;
-            }
-
             const decryptedData = await decryptData(params.data as string);
             if (!decryptedData) {
-                setAlert({ type: 'error', message: "Error on prescreening" });
+                setError("Invalid or expired link. Redirecting to home...");
                 return;
             }
+            const { projectCode } = decryptedData as any;
 
-            const { projectCode, projectId } = decryptedData as any;
+            console.log("🚀 ===== SUBMISSION START =====");
+            console.log("📝 Project Code:", projectCode);
+
             setLoading(true);
+
+            const formattedResponses = Object.keys(responses).map((key) => {
+                const answer = responses[Number(key)];
+                return {
+                    questionId: Number(key),
+                    answer: Array.isArray(answer) ? answer.join(',') : answer
+                };
+            });
+
+            console.log("📤 Request Data:", {
+                projectCode,
+                responses: formattedResponses
+            });
 
             const response = await qualificationService.responentScreeningFinisher(
                 projectCode,
-                formatResponses(responses)
+                formattedResponses
             );
-            console.log("Finisher response:", response?.data);
 
-            // Check the actual response structure and handle accordingly
-            if (response?.data?.status === TARGET_SUITABLE) {
+            // response is already the data object, no need for response?.data
+            console.log("📥 API Response:", response);
+
+            if (response?.status === TARGET_SUITABLE) {
+                console.log("✅ Status is TARGET_SUITABLE");
                 const encryptedStartStatus = await encryptData({
                     projectCode,
                     status: 'STARTED'
                 });
                 await qualificationService.updateRespondentStatus(encryptedStartStatus);
-
-                // Check if surveyLink exists in the response
-                const surveyLink = response?.data?.surveyLink || response?.data?.surveyLinkTemplate;
-                if (surveyLink) {
-                    redirectToExternalSite(surveyLink);
+                
+                if (response.surveyLink) {
+                    redirectToExternalSite(response.surveyLink);
                 } else {
-                    // Handle case where no survey link is provided
                     redirectToResult(projectCode, 'TARGET_UNSUITABLE');
                 }
             } else {
-                const status = response?.data?.status || 'TARGET_UNSUITABLE';
+                const status = response?.status?.toUpperCase() || 'TARGET_UNSUITABLE';
                 redirectToResult(projectCode, status);
             }
         } catch (error: any) {
+            console.log("💥 ERROR in submission:", {
+                message: error.message,
+                response: error.response,
+                stack: error.stack
+            });
             if (error.response?.status === 403) {
                 redirectToResult(pCode, 'TARGET_UNSUITABLE');
             } else if (error.response?.status === 400 && error.response.data.message === 'QUOTA_FULL') {
                 redirectToResult(pCode, 'QUOTA_FULL');
             } else {
-                handleError(error);
+                setAlert({
+                    type: 'error',
+                    message: "An error occurred while submitting answers. Please try again later."
+                });
             }
         } finally {
             setLoading(false);
-        }
-    };
-
-    const hasIncompleteAnswers = (): boolean => {
-        return questions.some((question) => {
-            const response = responses[question.questionId];
-            if (question.questionType === 'single_choice' || question.questionType === 'open_text') {
-                return !response;
-            }
-            if (question.questionType === 'multiple_choice') {
-                return !response || (response as string[]).length === 0;
-            }
-            return false;
-        });
-    };
-
-    const formatResponses = (responses: { [key: string]: any }) => {
-        return Object.keys(responses).map((key) => ({
-            questionId: Number(key),
-            answer: Array.isArray(responses[Number(key)])
-                ? (responses[Number(key)] as string[]).join(',')
-                : (responses[Number(key)] as string),
-        }));
-    };
-
-    const handleResponseStatus = (status: string) => {
-        if (status.toLowerCase() === TARGET_SUITABLE.toLowerCase()) {
-            // router.push(`/survey/internal/start?projectCode=${pCode}`);
-        } else {
-            redirectToResult(pCode, 'TARGET_UNSUITABLE');
         }
     };
 
@@ -215,10 +200,10 @@ const FeatureSurveyScreening = () => {
         console.log("error: ", error)
         const errorMessage =
             error.response?.status === 403
-                ? "tForbidden"
+                ? "Forbidden: You are not permitted to participate in this survey."
                 : error.response?.data?.errors
-                    ? error.response.data.errors[0].message || "Error on prescreening"
-                    : "Error on prescreening";
+                    ? error.response.data.errors[0].message || "Invalid or expired link. Redirecting to home..."
+                    : "Invalid or expired link. Redirecting to home...";
         setError(errorMessage);
         setAlert({ type: 'error', message: errorMessage });
     };
@@ -243,7 +228,6 @@ const FeatureSurveyScreening = () => {
                 }
 
                 const response = await qualificationService.initiateScreening(projectCode);
-                console.log("response from initiate: ", response?.data);
 
                 // The response structure is different - questions are at the top level
                 const questions = response?.data?.questions || [];
@@ -304,7 +288,6 @@ const FeatureSurveyScreening = () => {
             }
 
             const decryptedData = await decryptData(params.data as string);
-            console.log("prescreening data: ", decryptedData);
 
             if (!decryptedData) {
                 throw new Error("Error on prescreening");
@@ -378,13 +361,14 @@ const FeatureSurveyScreening = () => {
 
     if (deviceRestricted) {
         return (
-            <ScrollView style={tw`flex-1 bg-white`}>
+           <EnrollmentLayout>
+             <ScrollView style={tw`flex-1`}>
                 <View style={tw`p-4`}>
                     <Text style={tw`text-2xl font-bold mb-4`}>
-                        'preScreening.device_restriction_title'
+                        Device Not Supported
                     </Text>
                     <Text style={tw`text-base mb-4`}>
-                        'preScreening.device_restriction_paragraph'
+                        Your current device is not supported for this survey. Please copy the link below and use it on a supported device.
                     </Text>
 
                     <View style={tw`bg-gray-100 p-4 rounded-lg mb-4`}>
@@ -398,7 +382,7 @@ const FeatureSurveyScreening = () => {
                             style={tw`bg-[#32B3C2] p-3 rounded-lg items-center`}
                         >
                             <Text style={tw`text-white font-medium`}>
-                                'preScreening.copy_link_button'
+                                Copy Link
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -411,7 +395,7 @@ const FeatureSurveyScreening = () => {
 
                     <View style={tw`mt-4`}>
                         <Text style={tw`text-xl font-bold mb-4`}>
-                            'preScreening.supported_devices_heading'
+                            Supported Devices:
                         </Text>
                         <View style={tw`flex-row justify-around`}>
                             {['Mobile', 'Tablet', 'Desktop'].map((device) => (
@@ -432,6 +416,7 @@ const FeatureSurveyScreening = () => {
                     </View>
                 </View>
             </ScrollView>
+           </EnrollmentLayout>
         );
     }
 
@@ -439,11 +424,11 @@ const FeatureSurveyScreening = () => {
         <EnrollmentLayout loading={loading || redirecting}>
             <ScrollView style={tw`flex-1 bg-white`}>
                 <View style={tw`p-4`}>
-                    {alert && (
+                    {/* Only show non-validation alerts at the top */}
+                    {alert && alert.type !== 'error' && (
                         <PrimaryAlert
                             type={alert.type}
                             message={alert.message}
-                        // onClose={() => setAlert(null)} 
                         />
                     )}
 
@@ -472,36 +457,56 @@ const FeatureSurveyScreening = () => {
                                 />
                             ))}
 
-                            <View style={tw`flex-row justify-between mt-6`}>
-                                <TouchableOpacity
-                                    onPress={handleSubmit}
-                                    style={tw`bg-[#32B3C2] px-6 py-3 rounded-lg flex-1 mr-2`}
-                                >
-                                    <Text style={tw`text-white text-center font-medium`}>
-                                        Submit
+                            <View>
+                                {/* Add error message above the buttons */}
+                                {alert?.type === 'error' && (
+                                    <Text style={tw`text-red-500 text-center mb-4`}>
+                                        {alert.message}
                                     </Text>
-                                </TouchableOpacity>
+                                )}
 
-                                <TouchableOpacity
-                                    onPress={handleCancel}
-                                    style={tw`bg-gray-200 px-6 py-3 rounded-lg flex-1 ml-2`}
-                                >
-                                    <Text style={tw`text-gray-700 text-center font-medium`}>
-                                        Cancel
-                                    </Text>
-                                </TouchableOpacity>
+                                <View style={tw`flex-row justify-between mt-6`}>
+                                    <TouchableOpacity
+                                        onPress={handleSubmit}
+                                        style={tw`bg-[#32B3C2] px-6 py-3 rounded-lg flex-1 mr-2`}
+                                    >
+                                        <Text style={tw`text-white text-center font-medium`}>
+                                            Submit
+                                        </Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={handleCancel}
+                                        style={tw`bg-gray-200 px-6 py-3 rounded-lg flex-1 ml-2`}
+                                    >
+                                        <Text style={tw`text-gray-700 text-center font-medium`}>
+                                            Cancel
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     )}
                 </View>
 
-                {/* {showConfirmModal && (
-                <ConfirmationModal 
-                    onConfirm={handleConfirmCancel}
-                    onDeny={() => setShowConfirmModal(false)}
-                    message={t('preScreening.cancel_modal_message')}
+                <ConfirmationAlert
+                    visible={showConfirmModal}
+                    title="Cancel"
+                    message="Cancelling now will prevent you from receiving the reward. Are you sure you want to cancel?"
+                    buttons={[
+                        {
+                            text: "No",
+                            onPress: () => setShowConfirmModal(false),
+                            style: "cancel"
+                        },
+                        {
+                            text: "Yes",
+                            onPress: handleConfirmCancel,
+                            style: "destructive"
+                        }
+                    ]}
+                    onClose={() => setShowConfirmModal(false)}
                 />
-            )} */}
             </ScrollView>
         </EnrollmentLayout>
     );
