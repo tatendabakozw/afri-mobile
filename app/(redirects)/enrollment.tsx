@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Platform } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import tw from 'twrnc';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { decryptData, encryptData } from '@/helpers/encryption';
 import PrimaryAlert from '@/components/alerts/primary-alert';
 import getGeoIp from '@/utils/geo-ip';
 import QuestionItem from '@/components/question-item/question-item';
+import QualificationService from '@/api/services/qualification/QualificationService';
 
 interface Translation {
     language: string;
@@ -62,6 +63,7 @@ const FeatureSurveyScreening = () => {
     const [redirecting, setRedirecting] = useState<boolean>(false);
 
     const diyService = new DiyService();
+    const qualificationService = new QualificationService();
 
     const fetchGeoIpDetails = async (): Promise<void> => {
         try {
@@ -75,6 +77,11 @@ const FeatureSurveyScreening = () => {
     };
 
     const checkDeviceCompatibility = (deviceRestrictions: string[]): void => {
+        if (!deviceRestrictions || !Array.isArray(deviceRestrictions)) {
+            // If deviceRestrictions is undefined or not an array, don't restrict any devices
+            return;
+        }
+        
         const deviceType = detectDeviceType();
         if (deviceRestrictions.includes(deviceType.toLowerCase())) {
             setDeviceRestricted(true);
@@ -121,32 +128,42 @@ const FeatureSurveyScreening = () => {
     const handleSubmit = async () => {
         try {
             if (hasIncompleteAnswers()) {
-                setAlert({ type: 'error', message:" t('preScreening.all_questions_mandatory')" });
+                setAlert({ type: 'error', message: "All questions are mandatory" });
                 return;
             }
 
             const decryptedData = await decryptData(params.data as string);
             if (!decryptedData) {
-                setAlert({ type: 'error', message: "t('preScreening.error_message')" });
+                setAlert({ type: 'error', message: "Error on prescreening" });
                 return;
             }
 
             const { projectCode, projectId } = decryptedData as any;
             setLoading(true);
 
-            const response = await diyService.handleRespondentAnswers({
+            const response = await qualificationService.responentScreeningFinisher(
                 projectCode,
-                projectId,
-                responses: formatResponses(responses),
-            });
+                formatResponses(responses)
+            );
 
-            if (globalHostingType === 'INTERNAL') {
-                handleResponseStatus(response.data.data.status);
-            } else {
+            if (response.data.data.status === TARGET_SUITABLE) {
+                const encryptedStartStatus = await encryptData({ 
+                    projectCode, 
+                    status: 'STARTED' 
+                });
+                await qualificationService.updateRespondentStatus(encryptedStartStatus);
                 redirectToExternalSite(response?.data?.data.surveyLinkTemplate);
+            } else {
+                redirectToResult(projectCode, response.data.data.status);
             }
         } catch (error: any) {
-            handleError(error);
+            if (error.response?.status === 403) {
+                redirectToResult(pCode, 'TARGET_UNSUITABLE');
+            } else if (error.response?.status === 400 && error.response.data.message === 'QUOTA_FULL') {
+                redirectToResult(pCode, 'QUOTA_FULL');
+            } else {
+                handleError(error);
+            }
         } finally {
             setLoading(false);
         }
@@ -183,67 +200,126 @@ const FeatureSurveyScreening = () => {
     };
 
     const handleError = (error: any) => {
+        console.log("error: ", error)
         const errorMessage =
             error.response?.status === 403
-                ? "t('preScreening.forbidden_message')"
+                ? "tForbidden"
                 : error.response?.data?.errors
-                    ? error.response.data.errors[0].message || "t('preScreening.error_message')"
-                    :" t('preScreening.error_message')";
+                    ? error.response.data.errors[0].message || "Error on prescreening"
+                    :"Error on prescreening";
         setError(errorMessage);
         setAlert({ type: 'error', message: errorMessage });
+    };
+
+    const initiateScreeningProcess = useCallback(
+        async (projectCode: string, countryCode: string, deviceRestrictions: string[], testFlag: boolean) => {
+            try {
+                if (!testFlag) {
+                    // Check geo-ip location
+                    const isGeoIpValid = await validateGeoIpLocation(countryCode);
+                    if (!isGeoIpValid) {
+                        redirectToResult(projectCode, 'GEO_LOCKED');
+                        return;
+                    }
+
+                    // Check device compatibility
+                    const isDeviceCompatible = validateDeviceCompatibility(deviceRestrictions);
+                    if (!isDeviceCompatible) {
+                        redirectToResult(projectCode, 'TARGET_UNSUITABLE');
+                        return;
+                    }
+                }
+
+                const response = await qualificationService.initiateScreening(projectCode);
+                const status = response?.data?.data?.status;
+
+                if (status === TARGET_SUITABLE) {
+                    if (globalHostingType !== 'INTERNAL') {
+                        redirectToExternalSite(response?.data?.data.surveyLinkTemplate);
+                        return;
+                    }
+                    // Implement internal survey redirect
+                    // router.push(`/(survey)/internal/start?projectCode=${projectCode}`);
+                    return;
+                } else if (status === 'TARGET_UNSUITABLE') {
+                    redirectToResult(projectCode, 'TARGET_UNSUITABLE');
+                    return;
+                }
+
+                const questions = response?.data?.data?.questions || [];
+                if (questions.length === 0) {
+                    if (globalHostingType !== 'INTERNAL') {
+                        redirectToExternalSite(response?.data?.data.surveyLinkTemplate);
+                        return;
+                    }
+                    // Handle internal survey start
+                } else {
+                    setQuestions(questions);
+                }
+            } catch (error: any) {
+                handleError(error);
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    );
+
+    const validateGeoIpLocation = async (countryCode: string): Promise<boolean> => {
+        try {
+            const geoIpDetails = await getGeoIp();
+            if (geoIpDetails?.data?.country_code) {
+                const resolvedCountryCode = geoIpDetails.data.country_code.toLowerCase();
+                setGeoIpCountry(resolvedCountryCode);
+                return resolvedCountryCode === countryCode?.toLowerCase();
+            }
+        } catch (error) {
+            return false;
+        }
+        return false;
+    };
+
+    const validateDeviceCompatibility = (deviceRestrictions: string[]): boolean => {
+        if (!deviceRestrictions || !Array.isArray(deviceRestrictions)) {
+            return true;
+        }
+        const deviceType = detectDeviceType();
+        if (deviceRestrictions.includes(deviceType.toLowerCase())) {
+            setDeviceRestricted(true);
+            return false;
+        }
+        return true;
     };
 
     const fetchScreeningData = async (): Promise<void> => {
         setLoading(true);
         try {
-            await fetchGeoIpDetails();
-            
             if (!params.data) {
-                throw new Error("t('preScreening.error_message')");
+                throw new Error("Error on prescreening");
             }
 
-            const decryptedData = decryptData(params.data as string);
+            const decryptedData = await decryptData(params.data as string);
+            console.log("prescreening data: ", decryptedData);
+            
             if (!decryptedData) {
-                throw new Error("t('preScreening.error_message')");
+                throw new Error("Error on prescreening");
             }
 
-            const { projectCode, projectId, countryCode, deviceRestrictions, surveyHostingType } = decryptedData as any;
+            const { 
+                projectCode = '', 
+                projectId = '', 
+                countryCode = '', 
+                deviceRestrictions = [], 
+                surveyHostingType = '',
+                isTest = false 
+            } = decryptedData as any;
 
             setPCode(projectCode);
-            checkDeviceCompatibility(deviceRestrictions);
-
-            if (geoIpCountry && geoIpCountry.toLowerCase() !== countryCode.toLowerCase()) {
-                redirectToResult(projectCode, 'TARGET_UNSUITABLE');
-                return;
-            }
-            
             setGlobalHostingType(surveyHostingType);
 
-            const response = await diyService.initiateDiyProjectScreening({ projectCode, projectId });
-            const status = response?.data?.data?.status;
+            // Start screening process
+            await initiateScreeningProcess(projectCode, countryCode, deviceRestrictions, isTest);
 
-            if (status === TARGET_SUITABLE) {
-                if (surveyHostingType !== 'INTERNAL') {
-                    redirectToExternalSite(response?.data?.data.surveyLinkTemplate);
-                    return;
-                }
-                // router.push(`/survey/internal/start?projectCode=${projectCode}`);
-                return;
-            } else if (status === 'TARGET_UNSUITABLE') {
-                redirectToResult(projectCode, 'TARGET_UNSUITABLE');
-                return;
-            }
-
-            const questions = response?.data?.data?.questions || [];
-            if (questions.length === 0) {
-                if (surveyHostingType !== 'INTERNAL') {
-                    redirectToExternalSite(response?.data?.data.surveyLinkTemplate);
-                    return;
-                }
-                // router.push(`/survey/internal/start?projectCode=${projectCode}`);
-            } else {
-                setQuestions(questions);
-            }
         } catch (error: any) {
             handleError(error);
         } finally {
@@ -262,7 +338,12 @@ const FeatureSurveyScreening = () => {
     const handleConfirmCancel = () => {
         setResponses({});
         setShowConfirmModal(false);
-        router.back();
+        try {
+            router.back();
+        } catch {
+            // Fallback to a default route if back() fails
+            router.push('/');  // or whatever your home route is
+        }
     };
 
     const getTranslatedText = (

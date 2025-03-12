@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { GeoIpResponse, GeoIpResult } from './Types';
+import { ABSTRACT_API_KEY, ABSTRACT_API_URL, API_IPIFY_URL } from '@/constants/env';
 
 const getUserIpAddress = async (): Promise<string | null> => {
     try {
-        const ipifyUrl = process.env.API_IPIFY_URL;
+        const ipifyUrl = API_IPIFY_URL;
         if (!ipifyUrl) {
             console.error('IPIFY URL is not set');
             return null;
@@ -17,8 +18,8 @@ const getUserIpAddress = async (): Promise<string | null> => {
 };
 
 const getGeoIpData = async (ipAddress: string): Promise<GeoIpResult> => {
-    const apiKey = process.env.ABSTRACT_API_KEY;
-    const abstractApiUrl = process.env.ABSTRACT_API_URL;
+    const apiKey = ABSTRACT_API_KEY;
+    const abstractApiUrl = ABSTRACT_API_URL;
     if (!apiKey || !abstractApiUrl) {
         return { data: null, subdivisionCode: null, postalCode: null };
     }
