@@ -1,5 +1,5 @@
 import apiClient from '@/api/apiClient';
-import { CRYPTO_KEY } from '@/constants/env';
+import { API_PROD_URL, CRYPTO_KEY } from '@/constants/env';
 import axios, { AxiosInstance} from 'axios';
 import CryptoJS from 'crypto-js';
 
@@ -62,7 +62,7 @@ class QualificationService {
             const config = {
                 method: 'get',
                 maxBodyLength: Infinity,
-                url: `${process.env.REACT_APP_API_PROD_URL}/projects/inflow/screening/initiate/${projectCode}/${referralCode}`,
+                url: `${API_PROD_URL}/projects/inflow/screening/initiate/${projectCode}/${referralCode}`,
                 headers: {
                     'accept': '*/*',
                     'Authorization': `Bearer ${auth}`
@@ -84,7 +84,7 @@ class QualificationService {
             const config = {
                 method: 'post',
                 maxBodyLength: Infinity,
-                url: `${process.env.REACT_APP_API_PROD_URL}/projects/screening/respond`,
+                url: `${API_PROD_URL}/projects/screening/respond`,
                 headers: {
                     'accept': '*/*',
                     'Authorization': `Bearer ${auth}`
@@ -181,7 +181,7 @@ class QualificationService {
             const config = {
                 method: 'patch',
                 maxBodyLength: Infinity,
-                url: `${process.env.REACT_APP_API_PROD_URL}/projects/update/respondent/status`,
+                url: `${API_PROD_URL}/projects/update/respondent/status`,
                 headers: {
                     'accept': '*/*',
                     'Authorization': `Bearer ${auth}`

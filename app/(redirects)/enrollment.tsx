@@ -99,7 +99,7 @@ const FeatureSurveyScreening = () => {
 
     const redirectToResult = async (projectCode: string, status: string) => {
         const encryptedStatus = await encryptData({ projectCode, status });
-        router.push(`/(results)/index?data=${encodeURIComponent(encryptedStatus)}`);
+        router.push(`/(results)?data=${encodeURIComponent(encryptedStatus)}`);
     };
 
     const redirectToExternalSite = (url: string) => {
@@ -330,7 +330,7 @@ const FeatureSurveyScreening = () => {
             router.back();
         } catch {
             // Fallback to a default route if back() fails
-            router.push('/');  // or whatever your home route is
+            router.push('/(tabs)');  // or whatever your home route is
         }
     };
 

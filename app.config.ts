@@ -1,6 +1,9 @@
 export default {
     expo: {
-      name: "afri-mobile",
+      name: "AfriSight",
+      android: {
+        package: "com.bako.afrisight"
+      },
       extra: {
         apiProdUrl: process.env.API_PROD_URL,
         cryptoKey: process.env.CRYPTO_KEY,
@@ -15,6 +18,12 @@ export default {
         zendeskKey: process.env.ZENDESK_KEY,
         zohoKey: process.env.ZOHO_KEY,
         googleClientId: process.env.GOOGLE_CLIENT_ID,
+        eas: {
+          projectId: "e8d0c8fe-cd0b-4517-aaa4-980cc63e9787"
+        }
       },
+      eas: {
+        projectId: "e8d0c8fe-cd0b-4517-aaa4-980cc63e9787"  
+      }
     },
   };

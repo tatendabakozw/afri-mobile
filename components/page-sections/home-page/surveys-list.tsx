@@ -24,13 +24,12 @@ type Survey = {
     tolunaProfileCompleted?: boolean
 };
 
-
-const SurveysList = () => {
-
+const SurveysList = () =>{
     const [surveys, setSurveys] = useState<Survey[]>([]);
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
     const router = useRouter()
+
     const fetchSurveys = useMemo(() => async () => {
         setLoading(true);
         let fetchedSurveys: Survey[] = [];
@@ -152,6 +151,7 @@ const SurveysList = () => {
         fetchSurveys();
     }, [fetchSurveys]);
 
+
     return (
         <View style={tw`flex flex-col overflow-hidden`}>
             {/* Table Header */}
@@ -191,6 +191,8 @@ const SurveysList = () => {
         </View>
     )
 }
+
+
 
 export default SurveysList
 

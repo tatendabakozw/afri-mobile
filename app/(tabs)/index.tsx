@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Touchable, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import tw from 'twrnc'
 import { useEffect } from 'react';
@@ -8,6 +8,8 @@ import BannerComponent from '@/components/page-sections/home-page/banner-compone
 import CompleteProfileWarning from '@/components/page-sections/home-page/complete-profile-warning';
 import TipsComponent from '@/components/page-sections/home-page/tips-component';
 import SurveysList from '@/components/page-sections/home-page/surveys-list';
+import { router, useLocalSearchParams } from 'expo-router';
+
 
 export default function TabOneScreen() {
 
@@ -22,6 +24,9 @@ export default function TabOneScreen() {
   return (
     <GeneralLayout>
       <ScrollView style={tw`flex-1`}>
+        {/* <TouchableOpacity onPress={() => router.push('/(results)')}>
+<Text>asdflkjlksdf</Text>
+        </TouchableOpacity> */}
         <View style={[tw`p-4 pb-32`, styles.container]}>
           <BannerComponent />
           <TipsComponent />

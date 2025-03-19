@@ -1,10 +1,11 @@
+import { CRYPTO_KEY } from '@/constants/env';
 import * as Crypto from 'expo-crypto';
 
 interface EncryptionData {
   [key: string]: any;
 }
 
-const ENCRYPTION_KEY = process.env.CRYPTO_KEY || 'default_key';
+const ENCRYPTION_KEY = CRYPTO_KEY || 'default_key';
 
 export const encryptData = async (data: EncryptionData): Promise<string> => {
     console.log("enbcryotuion key, ", ENCRYPTION_KEY)

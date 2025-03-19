@@ -1,3 +1,4 @@
+import { EXCHANGE_RATE_API_KEY, EXCHANGE_RATE_API_URL } from '@/constants/env';
 import axios from 'axios';
 
 const exchangeRateCache: { [key: string]: { rate: number; timestamp: number } } = {};
@@ -12,8 +13,8 @@ export const getExchangeRate = async (baseCurrency: string, targetCurrency: stri
             return exchangeRateCache[cacheKey].rate;
         }
 
-        const apiKey = process.env.EXCHANGE_RATE_API_KEY;
-        const apiUrl = process.env.EXCHANGE_RATE_API_URL;
+        const apiKey = EXCHANGE_RATE_API_KEY;
+        const apiUrl = EXCHANGE_RATE_API_URL;
 
         if (!apiKey || !apiUrl) {
             console.error('Exchange rate API key or API URL is not provided.');
